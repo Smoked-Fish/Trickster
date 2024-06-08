@@ -1,33 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net6.0</TargetFramework>
-        <LangVersion>latest</LangVersion>
-        <EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
-        <RootNamespace>$(MSBuildProjectName.Replace(" ", "_"))</RootNamespace>
-        <TranslationClassBuilder_AddGetByKey>true</TranslationClassBuilder_AddGetByKey>
-        <EnableHarmony>true</EnableHarmony>
-    </PropertyGroup>
+  <!-- Project properties -->
+  <PropertyGroup>
+    <EnableHarmony>false</EnableHarmony>
+    <CommonPatches>false</CommonPatches>
+  </PropertyGroup>
 
-    <ItemGroup>
-        <AdditionalFiles Remove="i18n\default.json" />
-    </ItemGroup>
+  <ItemGroup>
+    <Reference Include="SpaceCore">
+      <HintPath>$(GamePath)\Mods\SpaceCore\SpaceCore.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
 
-    <ItemGroup>
-      <None Remove=".gitattributes" />
-      <None Remove=".gitignore" />
-      <None Remove=".gitmodules" />
-    </ItemGroup>
-
-    <ItemGroup>
-        <PackageReference Include="Pathoschild.Stardew.ModBuildConfig" Version="4.1.1" />
-        <PackageReference Include="Pathoschild.Stardew.ModTranslationClassBuilder" Version="2.0.1" />
-    </ItemGroup>
-
-    <ProjectExtensions>
-        <VisualStudio>
-            <UserProperties manifest_1json__JsonSchema="" />
-        </VisualStudio>
-    </ProjectExtensions>
+  <ItemGroup>
+    <Folder Include="Framework\Patches\" />
+  </ItemGroup>
+  
+  <!-- Import Common targets -->
+  <Import Project="Framework\Common\common.targets" />
 
 </Project>

@@ -1,4 +1,11 @@
 {
   "Config.Trickster.EnableMod.Name": "Enable Mod",
-  "Config.Trickster.EnableMod.Description": "Enables the mod"
+  "Config.Trickster.EnableMod.Description": "Enables the mod",
+  "Config.Trickster.OpenMenuKey.Name": "Open Audio Menu",
+  "Config.Trickster.OpenMenuKey.Description": "Opens the audio select menu",
+  "Config.Trickster.EnableMusicCues.Name": "Enable Music Cues",
+  "Config.Trickster.EnableMusicCues.Description": "Adds the music cues to the menu",
+
+  "Text.Trickster.SelectedCue": "Selected Cue",
+  "Text.Trickster.DefaultName": "Farmer"
 }

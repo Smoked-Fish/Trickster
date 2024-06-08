@@ -1,22 +1,24 @@
-﻿global using SObject = StardewValley.Object;
-using Common.Managers;
-using HarmonyLib;
+﻿using Common.Managers;
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
+using System.Linq;
+using Microsoft.Xna.Framework;
+using SpaceCore.Events;
+using StardewValley.BellsAndWhistles;
+using StardewValley.Objects;
+using Trickster.Framework.Menus;
+using Trickster.Framework.Utilities;
+using static StardewValley.Farmer;
 
 namespace Trickster
 {
     public class ModEntry : Mod
     {
-        internal static IModHelper ModHelper { get; set; }
-        internal static IMonitor ModMonitor { get; set; }
-        internal static ModConfig Config { get; set; }
-        internal static Multiplayer Multiplayer { get; set; }
-        internal static ApiManager ApiManager { get; set; }
-
-        private static Harmony harmony;
-
+        public static IModHelper ModHelper { get; private set; } = null!;
+        public static IMonitor ModMonitor { get; private set; } = null!;
+        public static ModConfig Config { get; private set; } = null!;
+        public static Multiplayer? Multiplayer { get; private set; }
         public override void Entry(IModHelper helper)
         {
             // Setup the monitor, helper, config and multiplayer
@@ -25,23 +27,75 @@ namespace Trickster
             Config = Helper.ReadConfig<ModConfig>();
             Multiplayer = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
 
-            // Setup the manager
-            ApiManager = new ApiManager(helper, ModMonitor);
-
-            // Load the Harmony patches
-            harmony = new Harmony(this.ModManifest.UniqueID);
-            //new ExamplePatch(harmony).Apply();
+            // Init Common
+            ConfigManager.Init(ModManifest, Config, ModHelper, ModMonitor);
+            //PatchHelper.Init(new Harmony(ModManifest.UniqueID));
 
             // Hook into Game events
+            helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+            helper.Events.GameLoop.SaveLoaded += OnSaveLoaded;
+            helper.Events.GameLoop.Saving += OnSaving;
+            helper.Events.Input.ButtonsChanged += OnButtonChanged;
+        }
+        private static void OnUpdateTicked(object? sender, UpdateTickedEventArgs e)
+        {
+            if (!Context.IsWorldReady || !Config.EnableMod) return;
+
+            CueUtility.UpdateCueState();
+        }
+        private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
+        {
+            if (!Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu")) return;
+
+            ConfigManager.AddOption(nameof(ModConfig.EnableMod));
+            ConfigManager.AddOption(nameof(ModConfig.EnableMusicCues));
+            ConfigManager.AddOption(nameof(ModConfig.OpenMenuKey));
         }
 
-        private void OnGameLaunched(object sender, GameLaunchedEventArgs e)
+        private static void OnSaving(object? sender, SavingEventArgs e)
         {
-            ConfigManager.Initialize(ModManifest, Config, ModHelper, ModMonitor, harmony);
-            if (Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu"))
+            var favoriteCueNames = CueUtility.CueList.Where(c => c.Favorite).Select(c => c.Name).ToList();
+            ModHelper.Data.WriteJsonFile("favorites.json", favoriteCueNames);
+        }
+
+        private static void OnSaveLoaded(object? sender, SaveLoadedEventArgs e)
+        {
+            CueUtility.PopulateCueDict();
+        }
+        private static void OnButtonChanged(object? sender, ButtonsChangedEventArgs e)
+        {
+            if (!Context.IsWorldReady || !Config.EnableMod)
+                return;
+
+            //if (Config.TestKey!.JustPressed())
+            //{
+            //    //Game1.displayFarmer = false;
+            //    //Game1.player.isSitting.Value = !Game1.player.isSitting.Value; // Null ref object
+            //    //Game1.player.PerformKiss(Game1.player.facingDirection.Value);
+            //    //Multiplayer!.globalChatInfoMessageEvenInSinglePlayer("UserNotificationMessageFormat", "You Will Die In 7 Days.");
+            //    //var farmer = Game1.getAllFarmers().LastOrDefault(f => f != Game1.player);
+            //    //Item item = ItemRegistry.Create("(B)505");
+            //    //performEatAnimation(ItemRegistry.Create<SObject>("(O)789"));
+            //    foreach (var emote in Farmer.EMOTES)
+            //    {
+            //        ModMonitor.Log($"Name: {emote.displayName}, Hidden: {emote.hidden}", LogLevel.Debug);
+            //    }
+            //}
+
+            if (Config.OpenMenuKey!.JustPressed())
+                HandleMenuButtonPress();
+        }
+
+        private static void HandleMenuButtonPress()
+        {
+            if (Context.IsPlayerFree && Game1.activeClickableMenu == null)
             {
-                ConfigManager.AddOption(nameof(ModConfig.EnableMod));
+                Game1.activeClickableMenu = new AudioMenu();
+            }
+            else if (Game1.activeClickableMenu is AudioMenu)
+            {
+                Game1.activeClickableMenu.exitThisMenu();
             }
         }
     }
