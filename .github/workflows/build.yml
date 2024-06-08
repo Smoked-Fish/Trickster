@@ -27,7 +27,7 @@ jobs:
         echo "MOD_VERSION=$(cat ./manifest.json | jq --raw-output '.Version')" >> $GITHUB_ENV
         
         # Fetch the latest tag from the reference assemblies repository
-        echo "REFASM_TAG=$(curl -s 'https://api.github.com/repos/Smoked-Fish/mod-reference-assemblies/tags' | jq -r '.[0].name')" >> $GITHUB_ENV
+        echo "REFASM_TAG=SDV1.6.8-SMAPI4.0.8-SC1.23.1" >> $GITHUB_ENV
         
         # Set up GamePath
         echo "GamePath=$GITHUB_WORKSPACE/GamePath" >> "$GITHUB_ENV"
